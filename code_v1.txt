@@ -1,0 +1,48 @@
+import os
+from dotenv import load_dotenv
+
+# ✅ الاستدعاءات الجديدة والمتوافقة مع التحديثات:
+from langchain_community.document_loaders import TextLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain.chains import RetrievalQA
+from langchain_together import Together
+
+# تحميل متغيرات البيئة من ملف .env
+load_dotenv()
+
+# إعداد نموذج Together AI
+llm = Together(
+    model="deepseek-ai/DeepSeek-V3",
+    temperature=0.3,
+    max_tokens=500,
+    together_api_key=os.getenv("TOGETHER_API_KEY")
+)
+
+# تحميل جميع ملفات .txt من مجلد data
+docs = []
+folder_path = "data"
+for file in os.listdir(folder_path):
+    if file.endswith(".txt"):
+        loader = TextLoader(os.path.join(folder_path, file), encoding="utf-8")
+        docs.extend(loader.load())
+
+# تقسيم النصوص إلى مقاطع صغيرة (chunks)
+splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+split_docs = splitter.split_documents(docs)
+
+# تحويل المقاطع إلى Embeddings باستخدام نموذج محدد
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+# بناء قاعدة FAISS للفهرسة والاسترجاع
+vectorstore = FAISS.from_documents(split_docs, embeddings)
+
+# إنشاء سلسلة RAG للاستعلام والإجابة
+qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=vectorstore.as_retriever())
+
+# اختبار بالسؤال
+question = "ما حكم الإفطار عمدًا في رمضان؟"
+answer = qa_chain.run(question)
+
+print("\n🔹 الجواب:\n", answer)

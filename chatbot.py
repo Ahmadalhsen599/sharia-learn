@@ -1,0 +1,54 @@
+from bottle import Bottle, request, response
+from langchain_community.document_loaders import PyMuPDFLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain.chains import RetrievalQA
+from langchain_together import Together
+import os
+from langchain_community.document_loaders import TextLoader
+from dotenv import load_dotenv
+load_dotenv()
+llm = Together(
+    model="deepseek-ai/DeepSeek-V3",
+    temperature=0.3,
+    max_tokens=500,
+    together_api_key=os.getenv("TOGETHER_API_KEY")
+)
+docs = []
+folder_path = "data"
+for file in os.listdir(folder_path):
+    path = os.path.join(folder_path, file)
+    if file.endswith(".pdf"):
+        loader = PyMuPDFLoader(path)
+        docs.extend(loader.load())
+    elif file.endswith(".bdf"):  # أو .txt إن أحببت
+        loader = TextLoader(path, encoding="utf-8")
+        docs.extend(loader.load())
+
+
+splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+split_docs = splitter.split_documents(docs)
+
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+vectorstore = FAISS.from_documents(split_docs, embeddings)
+qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=vectorstore.as_retriever())
+
+app = Bottle()
+
+@app.post('/ask')
+def ask_question():
+    data = request.json
+    question = data.get("question", "")
+    if not question:
+        response.status = 400
+        return {"error": "يرجى إرسال سؤال"}
+    try:
+        answer = qa_chain.run(question)
+        return {"question": question, "answer": answer}
+    except Exception as e:
+        response.status = 500
+        return {"error": str(e)}
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000, debug=True)

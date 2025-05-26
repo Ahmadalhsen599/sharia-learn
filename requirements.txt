@@ -1,0 +1,7 @@
+langchain==0.1.14
+langchain-community
+langchain-together
+langchain-huggingface
+faiss-cpu
+sentence-transformers
+python-dotenv
