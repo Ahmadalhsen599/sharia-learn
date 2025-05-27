@@ -11,16 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->enum('role', ['student', 'teacher', 'admin'])->default('student');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
-        });
+       Schema::create('users', function (Blueprint $table) {
+    $table->id();
+    $table->string('f_name');
+    $table->string('l_name')->nullable();
+    $table->string('email')->unique();
+    $table->string('password');
+    $table->date('birth_date')->nullable();
+    $table->string('phone_number', 20)->nullable();
+    $table->unsignedTinyInteger('role')->default(3);
+    $table->boolean('isblocked')->default(false); // 1=admin, 2=teacher, 3=student
+    $table->timestamps();
+});
+
     }
 
     /**
