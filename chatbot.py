@@ -26,14 +26,11 @@ for file in os.listdir(folder_path):
         loader = TextLoader(path, encoding="utf-8")
         docs.extend(loader.load())
 
-
 splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 split_docs = splitter.split_documents(docs)
-
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 vectorstore = FAISS.from_documents(split_docs, embeddings)
 qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=vectorstore.as_retriever())
-
 app = Bottle()
 
 @app.post('/ask')
