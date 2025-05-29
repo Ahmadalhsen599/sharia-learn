@@ -18,6 +18,7 @@ return new class extends Migration
     $table->string('email')->unique();
     $table->string('password');
     $table->date('birth_date')->nullable();
+    $table->bigInteger('email_verification_code');
     $table->string('phone_number', 20)->nullable();
     $table->unsignedTinyInteger('role')->default(3);
     $table->boolean('isblocked')->default(false); // 1=admin, 2=teacher, 3=student

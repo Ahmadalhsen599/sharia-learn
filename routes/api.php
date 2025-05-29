@@ -19,12 +19,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 ///////////////////Authintication///////////////////////////////////////////////////////
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/send_email', [AuthController::class, 'send_email']);
 Route::post('/login',    [AuthController::class, 'login']);
 /////////////////middleware/////////////////////////////////////////////////////////////
 Route::middleware('auth:sanctum')->group(function () {
 
   
-    Route::middleware('role:3')->prefix('student')->group(function () {
+    Route::middleware(['role:3','block'])->prefix('student')->group(function () {
         Route::get('/me',     [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/dashboard', fn () => 'لوحة الطالب');

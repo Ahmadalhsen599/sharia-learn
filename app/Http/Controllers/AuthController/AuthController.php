@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
-
+use Illuminate\Support\Facades\Mail;
 class AuthController extends Controller
 {
     public function register(Request $request)
@@ -86,5 +86,44 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return response()->json($request->user());
+    }
+    public function send_email(Request $data){
+    $code = rand(100, 999);
+
+    Mail::send([], [], function ($message) use ($code) {
+        $message->to('ahmadalhussein788@gmail.com')
+                ->subject('كود تغيير كلمة السر ')
+                ->html('هذا الكود الخاص فيك: ' . $code);
+    });
+    }
+    public function reset_password_send_code(Request $data){
+        $user=User::where('email',$data->email)->first();
+        if(!$user)
+        {
+            return response()->jsonp(['message'=>'you dont register on these platform'],400);
+        }
+        else{
+    $code = rand(100, 999);
+    Mail::send([], [], function ($message) use ($code) {
+        $message->to($user->email)
+                ->subject('كود تغيير كلمة السر ')
+                ->html('هذا الكود الخاص فيك: ' . $code);
+    });
+        }
+    }
+    public function verifi_reset_password_code(Request $data){
+    $code=$data->code;
+    $user=User::where('email',$data->email)->first();
+    if($code==$user->email_verification_code){
+        return response()->json(["message"=>"code is whright"], 200);
+    }
+    else{
+         return response()->json(["message"=>"code is invalide"], 200);
+    }
+    }
+    public function change_code(Request $data){
+     $user=User::where('email',$data->email)->first();
+     $user->password=$data->password;
+     $user->save();
     }
 }
