@@ -1,6 +1,7 @@
 "use client";
 import Link from 'next/link';
 import React, { useState } from 'react';
+import axios from 'axios';
 
 export default function Register() {
     const [firstName, setFirstName] = useState('');
@@ -10,10 +11,35 @@ export default function Register() {
     const [password, setPassword] = useState('');
     const [birthDate, setBirthDate] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // هنا يمكنك إضافة منطق التسجيل
-        console.log({ firstName, lastName, email, phone, password, birthDate });
+
+        const data = {
+            f_name: firstName,
+            l_name: lastName,
+            email: email,
+            password: password,
+            password_confirmation: password,
+            birth_date: birthDate,
+            phone_number: phone,
+            role: 1,
+        };
+
+        try {
+            const response = await axios.post('http://127.0.0.1:8000/api/register', data, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // تخزين بيانات المستخدم في localStorage
+            localStorage.setItem('user', JSON.stringify(response.data));
+
+            console.log(response.data);
+            // يمكنك إضافة منطق للتعامل مع الاستجابة هنا
+        } catch (error) {
+            console.error('Error:', error);
+        }
     };
 
     return (
@@ -86,13 +112,12 @@ export default function Register() {
                         />
                     </div>
                 </div>
-                <Link
-                    href="#"
+                <button
+                    type="submit"
                     className="w-full block text-center bg-green-500 text-white font-semibold py-2 rounded hover:bg-green-600"
-                    onClick={handleSubmit}
                 >
                     إنشاء حساب
-                </Link>
+                </button>
             </form>
         </div>
     );

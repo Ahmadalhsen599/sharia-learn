@@ -1,15 +1,36 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
+import axios from 'axios';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // هنا يمكنك إضافة منطق تسجيل الدخول
-        console.log({ email, password });
+
+        const data = {
+            email: email,
+            password: password,
+        };
+
+        try {
+            const response = await axios.post('http://127.0.0.1:8000/api/login', data, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // تخزين رمز التوثيق أو بيانات المستخدم في localStorage
+            localStorage.setItem('token', response.data.token); // افترض أن الاستجابة تحتوي على توكن
+            localStorage.setItem('user', JSON.stringify(response.data.user)); // افترض أن هناك بيانات مستخدم
+
+            console.log(response.data);
+            // يمكنك إضافة منطق للتعامل مع الاستجابة هنا
+        } catch (error) {
+            console.error('Error:', error);
+        }
     };
 
     return (
@@ -42,7 +63,6 @@ export default function Login() {
                 >
                     تسجيل الدخول
                 </button>
-                
             </form>
         </div>
     );
