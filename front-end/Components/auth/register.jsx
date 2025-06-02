@@ -1,8 +1,7 @@
 "use client";
-import Link from 'next/link';
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 export default function Register() {
     const [firstName, setFirstName] = useState('');
@@ -36,7 +35,7 @@ export default function Register() {
             });
 
             localStorage.setItem('user', JSON.stringify(response.data));
-            setMessage('تم التسجيل بنجاح!'); // تعيين رسالة النجاح
+            setMessage('تم التسجيل بنجاح!'); // رسالة النجاح
             setTimeout(() => {
                 router.push('/'); // توجيه المستخدم إلى الصفحة الرئيسية بعد 2 ثانية
             }, 2000);
