@@ -1,11 +1,13 @@
 "use client";
 import React, { useState } from 'react';
-import Link from 'next/link';
 import axios from 'axios';
+import { useRouter } from 'next/router';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [message, setMessage] = useState('');
+    const router = useRouter();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -26,16 +28,20 @@ export default function Login() {
             localStorage.setItem('token', response.data.token); // افترض أن الاستجابة تحتوي على توكن
             localStorage.setItem('user', JSON.stringify(response.data.user)); // افترض أن هناك بيانات مستخدم
 
-            console.log(response.data);
-            // يمكنك إضافة منطق للتعامل مع الاستجابة هنا
+            setMessage('تم تسجيل الدخول بنجاح!'); // رسالة النجاح
+            setTimeout(() => {
+                router.push('/'); // توجيه المستخدم إلى الصفحة الرئيسية بعد 2 ثانية
+            }, 2000);
         } catch (error) {
             console.error('Error:', error);
+            setMessage('بيانات تسجيل الدخول غير صحيحة.'); // رسالة الخطأ
         }
     };
 
     return (
         <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
             <h2 className="text-2xl font-bold text-center mb-6">تسجيل الدخول</h2>
+            {message && <p className="text-center text-red-500 mb-4">{message}</p>} {/* عرض الرسالة */}
             <form onSubmit={handleSubmit}>
                 <div className="mb-4">
                     <label className="block text-gray-700">البريد الإلكتروني</label>

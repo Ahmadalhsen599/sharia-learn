@@ -8,17 +8,21 @@ const NavbarWithFilter = () => {
     const [query, setQuery] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [coursesData, setCoursesData] = useState([]);
 
     useEffect(() => {
         setIsMounted(true);
+        const fetchCourses = async () => {
+            try {
+                const response = await fetch('/api/courses'); // استدعاء API
+                const data = await response.json();
+                setCoursesData(data); // تعيين البيانات المستلمة
+            } catch (error) {
+                console.error("خطأ في جلب البيانات:", error);
+            }
+        };
+        fetchCourses();
     }, []);
-
-    const coursesData = [
-        { name: 'تحفيظ القرآن', link: '/courses/hifz' },
-        { name: 'تفسير القرآن', link: '/courses/tafsir' },
-        { name: 'تجويد القرآن', link: '/courses/tajweed' },
-        { name: 'فقه العبادات', link: '/courses/fiqh' },
-    ];
 
     const filteredCourses = coursesData.filter(course =>
         course.name.toLowerCase().includes(query.toLowerCase())
@@ -75,7 +79,7 @@ const NavbarWithFilter = () => {
                             onClick={() => setDropdownOpen(!dropdownOpen)}
                             className="text-white hover:bg-green-600 p-1 lg:p-2 rounded flex items-center text-sm sm:text-base"
                         >
-                            الدورات
+                           المسارات التعليمية 
                         </button>
                         {dropdownOpen && (
                             <div className="absolute right-0 bg-white shadow-lg rounded z-10 mt-2 w-56 lg:w-64">
@@ -172,7 +176,7 @@ const NavbarWithFilter = () => {
                     </Link>
 
                     <div className="px-4 py-2">
-                        <div className="text-white font-medium py-2 border-b border-green-500">الدورات</div>
+                        <div className="text-white font-medium py-2 border-b border-green-500">المسارات التعليمية</div>
                         <div className="pl-4">
                             {filteredCourses.map((course, index) => (
                                 <Link key={index} href={course.link} passHref>
