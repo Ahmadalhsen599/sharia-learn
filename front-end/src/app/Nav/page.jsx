@@ -1,32 +1,63 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FaMosque, FaBars, FaTimes, FaSearch, FaUser, FaSignInAlt } from "react-icons/fa";
+import { FaMosque, FaBars, FaTimes, FaSearch, FaUser, FaSignInAlt, FaBook } from "react-icons/fa";
+import { useRouter } from 'next/navigation';
 
 const NavbarWithFilter = () => {
+    const router = useRouter();
     const [isMounted, setIsMounted] = useState(false);
     const [query, setQuery] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
-    const [coursesData, setCoursesData] = useState([]);
+    const [learningPaths, setLearningPaths] = useState([]);
+    const [searchResults, setSearchResults] = useState([]);
+    const [searchOpen, setSearchOpen] = useState(false);
 
     useEffect(() => {
-        setIsMounted(true);
-        const fetchCourses = async () => {
+        const fetchLearningPaths = async () => {
             try {
-                const response = await fetch('/api/courses'); // استدعاء API
-                const data = await response.json();
-                setCoursesData(data); // تعيين البيانات المستلمة
+                // بيانات ثابتة بدلاً من API (يمكن استبدالها بطلب API لاحقاً)
+                const mockData = [
+                    {
+                        id: 'hifz',
+                        name: 'تحفيظ القرآن',
+                        description: 'مسار متكامل لحفظ القرآن الكريم'
+                    },
+                    {
+                        id: 'tafsir',
+                        name: 'تفسير القرآن',
+                        description: 'فهم معاني القرآن الكريم'
+                    },
+                    {
+                        id: 'tajweed',
+                        name: 'تجويد القرآن',
+                        description: 'تعلم أحكام التلاوة الصحيحة'
+                    }
+                ];
+                setLearningPaths(mockData);
             } catch (error) {
-                console.error("خطأ في جلب البيانات:", error);
+                console.error('Error fetching learning paths:', error);
             }
         };
-        fetchCourses();
+
+        fetchLearningPaths();
+        setIsMounted(true);
     }, []);
 
-    const filteredCourses = coursesData.filter(course =>
-        course.name.toLowerCase().includes(query.toLowerCase())
-    );
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (query.trim()) {
+            router.push(`/search?q=${encodeURIComponent(query)}`);
+            setQuery('');
+            setSearchOpen(false);
+        }
+    };
+
+    const handlePathClick = () => {
+        setDropdownOpen(false);
+        setMenuOpen(false);
+    };
 
     if (!isMounted) {
         return (
@@ -45,8 +76,8 @@ const NavbarWithFilter = () => {
     }
 
     return (
-        <div dir="rtl">
-            <nav className="bg-green-500 p-4 flex justify-between items-center">
+        <div dir="rtl" className="relative">
+            <nav className="bg-green-500 p-4 flex justify-between items-center sticky top-0 z-50">
                 <div className="flex items-center space-x-6">
                     <Link href="/" passHref>
                         <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center cursor-pointer">
@@ -56,16 +87,31 @@ const NavbarWithFilter = () => {
                     <h2 className="text-white text-xl sm:text-2xl lg:text-3xl font-bold">اقرأ</h2>
                 </div>
 
-                <div className="hidden md:flex items-center bg-white rounded-full px-3 py-1 flex-1 max-w-md mx-2 lg:mx-4">
+                <form onSubmit={handleSearch} className="hidden md:flex items-center bg-white rounded-full px-3 py-1 flex-1 max-w-md mx-2 lg:mx-4">
                     <input
                         type="text"
-                        placeholder="ابحث..."
+                        placeholder="ابحث عن مسار أو كورس..."
                         className="border-none outline-none w-full bg-transparent text-gray-800 text-sm sm:text-base"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={(e) => {
+                            setQuery(e.target.value);
+                            if (e.target.value.length > 0) {
+                                const results = learningPaths.filter(path =>
+                                    path.name.toLowerCase().includes(e.target.value.toLowerCase()) ||
+                                    path.description.toLowerCase().includes(e.target.value.toLowerCase())
+                                );
+                                setSearchResults(results);
+                                setSearchOpen(true);
+                            } else {
+                                setSearchOpen(false);
+                            }
+                        }}
+                        onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
                     />
-                    <FaSearch className="text-gray-500 text-sm sm:text-base" />
-                </div>
+                    <button type="submit">
+                        <FaSearch className="text-gray-500 text-sm sm:text-base" />
+                    </button>
+                </form>
 
                 <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
                     <Link href="/" passHref>
@@ -79,29 +125,24 @@ const NavbarWithFilter = () => {
                             onClick={() => setDropdownOpen(!dropdownOpen)}
                             className="text-white hover:bg-green-600 p-1 lg:p-2 rounded flex items-center text-sm sm:text-base"
                         >
-                           المسارات التعليمية 
+                            المسارات التعليمية
                         </button>
                         {dropdownOpen && (
-                            <div className="absolute right-0 bg-white shadow-lg rounded z-10 mt-2 w-56 lg:w-64">
-                                <div className="p-2 border-b">
-                                    <div className="flex items-center bg-gray-100 rounded-full px-3 py-1">
-                                        <input
-                                            type="text"
-                                            placeholder="ابحث..."
-                                            className="border-none outline-none w-full bg-transparent text-gray-800 text-xs sm:text-sm"
-                                            value={query}
-                                            onChange={(e) => setQuery(e.target.value)}
-                                        />
-                                        <FaSearch className="text-gray-500 text-xs sm:text-sm" />
-                                    </div>
+                            <div className="absolute right-0 bg-white shadow-lg rounded z-10 mt-2 w-56 lg:w-64 max-h-[70vh] overflow-y-auto">
+                                <div className="p-2 border-b border-gray-200 bg-green-100">
+                                    <h3 className="font-bold text-green-700">اختر مسارك التعليمي</h3>
                                 </div>
-                                <ul className="list-none p-2 max-h-60 overflow-y-auto">
-                                    {filteredCourses.map((course, index) => (
-                                        <li key={index} className="py-1 hover:bg-gray-200 rounded">
-                                            <Link href={course.link} passHref>
-                                                <span className="block p-2 text-black text-sm">
-                                                    {course.name}
-                                                </span>
+                                <ul className="list-none p-2">
+                                    {learningPaths.map((path) => (
+                                        <li key={path.id} className="py-1 hover:bg-gray-100 rounded transition">
+                                            <Link href={`/learning-paths/${path.id}`} passHref>
+                                                <div 
+                                                    className="flex items-center p-2 text-black text-sm cursor-pointer"
+                                                    onClick={handlePathClick}
+                                                >
+                                                    <FaBook className="ml-2 text-green-500" />
+                                                    <span className="flex-1">{path.name}</span>
+                                                </div>
                                             </Link>
                                         </li>
                                     ))}
@@ -154,19 +195,33 @@ const NavbarWithFilter = () => {
                 </div>
             </nav>
 
+            {/* القائمة المتنقلة */}
             {menuOpen && (
-                <div className="bg-green-600 md:hidden">
+                <div className="bg-green-600 md:hidden fixed w-full z-40">
                     <div className="p-4">
-                        <div className="flex items-center bg-white rounded-full px-4 py-2">
+                        <form onSubmit={handleSearch} className="flex items-center bg-white rounded-full px-4 py-2">
                             <input
                                 type="text"
-                                placeholder="ابحث عن دورة..."
+                                placeholder="ابحث عن مسار..."
                                 className="border-none outline-none w-full bg-transparent text-gray-800"
                                 value={query}
-                                onChange={(e) => setQuery(e.target.value)}
+                                onChange={(e) => {
+                                    setQuery(e.target.value);
+                                    if (e.target.value.length > 0) {
+                                        const results = learningPaths.filter(path =>
+                                            path.name.toLowerCase().includes(e.target.value.toLowerCase())
+                                        );
+                                        setSearchResults(results);
+                                        setSearchOpen(true);
+                                    } else {
+                                        setSearchOpen(false);
+                                    }
+                                }}
                             />
-                            <FaSearch className="text-gray-500" />
-                        </div>
+                            <button type="submit">
+                                <FaSearch className="text-gray-500" />
+                            </button>
+                        </form>
                     </div>
 
                     <Link href="/" passHref>
@@ -178,14 +233,15 @@ const NavbarWithFilter = () => {
                     <div className="px-4 py-2">
                         <div className="text-white font-medium py-2 border-b border-green-500">المسارات التعليمية</div>
                         <div className="pl-4">
-                            {filteredCourses.map((course, index) => (
-                                <Link key={index} href={course.link} passHref>
-                                    <span 
-                                        className="block text-white py-2 hover:bg-green-700 rounded px-2"
+                            {learningPaths.map((path) => (
+                                <Link key={path.id} href={`/learning-paths/${path.id}`} passHref>
+                                    <div 
+                                        className="flex items-center text-white py-2 hover:bg-green-700 rounded px-2"
                                         onClick={() => setMenuOpen(false)}
                                     >
-                                        {course.name}
-                                    </span>
+                                        <FaBook className="ml-2" />
+                                        <span>{path.name}</span>
+                                    </div>
                                 </Link>
                             ))}
                         </div>
@@ -219,6 +275,38 @@ const NavbarWithFilter = () => {
                             </span>
                         </Link>
                     </div>
+                </div>
+            )}
+
+            {/* نتائج البحث */}
+            {searchOpen && (
+                <div className="fixed md:absolute top-20 md:top-16 left-0 right-0 md:left-auto md:right-1/4 bg-white rounded shadow-lg z-30 mx-4 md:mx-0 md:w-1/2 max-h-[60vh] overflow-y-auto">
+                    <div className="p-3 border-b border-gray-200 bg-gray-50">
+                        <h3 className="font-bold">نتائج البحث عن "{query}"</h3>
+                    </div>
+                    <ul className="list-none">
+                        {searchResults.length > 0 ? (
+                            searchResults.map((path) => (
+                                <li key={path.id} className="border-b border-gray-100 last:border-0">
+                                    <Link href={`/learning-paths/${path.id}`} passHref>
+                                        <div 
+                                            className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+                                            onClick={() => {
+                                                setQuery('');
+                                                setSearchOpen(false);
+                                                setMenuOpen(false);
+                                            }}
+                                        >
+                                            <FaBook className="ml-2 text-green-500" />
+                                            <span className="flex-1">{path.name}</span>
+                                        </div>
+                                    </Link>
+                                </li>
+                            ))
+                        ) : (
+                            <li className="p-3 text-gray-500">لا توجد نتائج مطابقة</li>
+                        )}
+                    </ul>
                 </div>
             )}
         </div>
