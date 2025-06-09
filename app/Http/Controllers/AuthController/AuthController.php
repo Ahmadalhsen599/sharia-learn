@@ -36,7 +36,10 @@ class AuthController extends Controller
             'role'     => $data['role'],
         ]);
         $token = $user->createToken('auth_token')->plainTextToken;
-
+ Mail::send('emails.welcome', ['user' => $user], function ($message) use ($user) {
+    $message->to($user->email)
+            ->subject('منصة إقرأ التعليمية');
+});
         return response()->json([
             'token' => $token,
             'user'  => $user,

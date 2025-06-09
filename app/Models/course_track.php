@@ -6,6 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class course_track extends Model
-{
+{   protected $table="course_track";
     use HasFactory;
 }
