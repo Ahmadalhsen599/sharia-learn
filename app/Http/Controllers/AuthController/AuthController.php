@@ -36,10 +36,10 @@ class AuthController extends Controller
             'role'     => $data['role'],
         ]);
         $token = $user->createToken('auth_token')->plainTextToken;
- Mail::send('emails.welcome', ['user' => $user], function ($message) use ($user) {
-    $message->to($user->email)
-            ->subject('منصة إقرأ التعليمية');
-});
+//  Mail::send('emails.welcome', ['user' => $user], function ($message) use ($user) {
+//     $message->to($user->email)
+//             ->subject('منصة إقرأ التعليمية');
+// });
         return response()->json([
             'token' => $token,
             'user'  => $user,
@@ -106,12 +106,12 @@ class AuthController extends Controller
             return response()->jsonp(['message'=>'you dont register on these platform'],400);
         }
         else{
-    $code = rand(100, 999);
-    Mail::send([], [], function ($message) use ($code) {
-        $message->to($user->email)
-                ->subject('كود تغيير كلمة السر ')
-                ->html('هذا الكود الخاص فيك: ' . $code);
-    });
+    // $code = rand(100, 999);
+    // Mail::send([], [], function ($message) use ($code) {
+    //     $message->to($user->email)
+    //             ->subject('كود تغيير كلمة السر ')
+    //             ->html('هذا الكود الخاص فيك: ' . $code);
+    // });
         }
     }
     public function verifi_reset_password_code(Request $data){

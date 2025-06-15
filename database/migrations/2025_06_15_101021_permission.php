@@ -11,14 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-         Schema::create('course_track', function (Blueprint $table) {
+        Schema::create('permissions', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('course_id')->constrained('courses')->onDelete('cascade');
-            $table->foreignId('tracks')->constrained('tracks')->onDelete('cascade');
-
-            $table->integer('order')->default(0); // ترتيب الكورس داخل المسار
-
+            $table->string('permission')->unique();
             $table->timestamps();
         });
     }
@@ -28,6 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+                Schema::dropIfExists('permissions');
+
     }
 };

@@ -11,6 +11,7 @@ return new class extends Migration
     public function up(): void
     {
        Schema::create('users', function (Blueprint $table) {
+    DB::statement('SET FOREIGN_KEY_CHECKS=0;');
     $table->id();
     $table->string('f_name');
     $table->string('l_name')->nullable();
@@ -18,11 +19,11 @@ return new class extends Migration
     $table->string('password');
     $table->date('birth_date')->nullable();
     $table->string('phone_number', 20)->nullable();
-    $table->unsignedTinyInteger('role')->default(3); // 1=admin, 2=teacher, 3=student
+    $table->foreignId('role_id')->constrained('roles')->onDelete('cascade')->default(3);
    $table->boolean('isblocked')->default(0);
     $table->timestamps();
 });
-
+   DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
     }
 

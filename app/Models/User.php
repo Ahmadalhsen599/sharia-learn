@@ -45,14 +45,5 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-    //  public const ROLES = [
-    //     1 => 'admin',
-    //     2 => 'teacher',
-    //     3 => 'student',
-    // ];
-
-    // public function getRoleName(): string
-    // {
-    //     return self::ROLES[$this->role] ?? 'unknown';
-    // }
+   
 }
