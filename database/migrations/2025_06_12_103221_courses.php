@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('course_name');
             $table->string('title');
-            $table->string('subtitle');
+            $table->string('subtitle')->nullable();
             $table->text('description')->nullable();
             $table->integer('lesson_count')->default(0);
             $table->foreignId('Teacher_id')->constrained('teachers')->onDelete('cascade');
