@@ -1,199 +1,215 @@
-// app/courses/[courseId]/[lessonId]/page.jsx
-import { FaPlay, FaArrowLeft, FaBook, FaDownload, FaQuestionCircle } from 'react-icons/fa';
-import Link from 'next/link';
+'use client';
+import { useEffect, useState } from 'react';
 
-// بيانات الدروس لكل كورس
-const lessonsData = {
-    'hifz-beginner': {
-        '1': {
-            title: 'مقدمة الكورس',
-            description: 'تعريف بالكورس وأهدافه وطريقة الدراسة',
-            duration: '15 دقيقة',
-            videoUrl: '/videos/hifz-beginner/1.mp4',
-            resources: [
-                { name: 'ملخص الدرس PDF', url: '/resources/hifz-beginner/1.pdf' },
-                { name: 'تمارين تطبيقية', url: '/resources/hifz-beginner/1-exercises.pdf' }
-            ],
-            nextLesson: '2'
-        },
-        '2': {
-            title: 'طريقة الحفظ الصحيحة',
-            description: 'تعلم الطريقة المثلى لحفظ القرآن الكريم',
-            duration: '25 دقيقة',
-            videoUrl: '/videos/hifz-beginner/2.mp4',
-            resources: [
-                { name: 'خطوات الحفظ', url: '/resources/hifz-beginner/2.pdf' }
-            ],
-            prevLesson: '1',
-            nextLesson: '3'
-        }
-    },
-    'tafsir-baqarah': {
-        '1': {
-            title: 'فضائل سورة البقرة',
-            description: 'فضائل السورة كما وردت في السنة النبوية',
-            duration: '20 دقيقة',
-            videoUrl: '/videos/tafsir-baqarah/1.mp4',
-            resources: [
-                { name: 'الأحاديث الصحيحة', url: '/resources/tafsir-baqarah/1.pdf' }
-            ],
-            nextLesson: '2'
-        }
-    }
+const topics = [
+  { id: 1, title: 'المقدمة' },
+  { id: 2, title: 'الموضوع الرئيسي' },
+];
+
+const rawLessons = [
+  {
+    id: 101,
+    topic_id: 1,
+    order: 1,
+    title: 'مقدمة الدرس الأول',
+    content: 'هذا هو محتوى الدرس الأول في المقدمة.',
+    image_url: 'https://via.placeholder.com/300x150?text=Intro+Lesson+1',
+  },
+  {
+    id: 102,
+    topic_id: 1,
+    order: 2,
+    title: 'مقدمة الدرس الثاني',
+    content: 'هذا هو محتوى الدرس الثاني في المقدمة.',
+    image_url: 'https://via.placeholder.com/300x150?text=Intro+Lesson+2',
+  },
+  {
+    id: 201,
+    topic_id: 2,
+    order: 1,
+    title: 'درس في الموضوع الرئيسي',
+    content: 'تفاصيل هذا الدرس المتعلق بالموضوع الرئيسي.',
+    image_url: 'https://via.placeholder.com/300x150?text=Main+Topic+Lesson',
+  },
+];
+
+// دالة لجلب حالات الدروس من localStorage
+const loadLessonStatuses = () => {
+  const stored = localStorage.getItem('lessonStatuses');
+  return stored ? JSON.parse(stored) : {};
 };
 
-export default function LessonPage({ params }) {
-    const courseId = params.courseId;
-    const lessonId = params.lessonId;
-    const lesson = lessonsData[courseId]?.[lessonId];
-    
-    if (!lesson) {
-        return (
-            <div className="p-4 text-center">
-                <h1 className="text-2xl font-bold text-red-600">الدرس غير موجود</h1>
-                <Link href={`/courses/${courseId}`} className="text-green-600 hover:underline mt-2 inline-block">
-                    ← العودة للكورس
-                </Link>
-            </div>
-        );
+// دالة لحفظ الحالات
+const saveLessonStatuses = (statuses) => {
+  localStorage.setItem('lessonStatuses', JSON.stringify(statuses));
+};
+
+function StatusBadge({ status }) {
+  const colors = {
+    completed: 'bg-green-100 text-green-700',
+    'in-progress': 'bg-yellow-100 text-yellow-700',
+    locked: 'bg-gray-200 text-gray-400',
+  };
+  const labels = {
+    completed: 'مكتمل',
+    'in-progress': 'جاري',
+    locked: 'مغلق',
+  };
+
+  return (
+    <span
+      className={`text-xs px-2 py-0.5 rounded font-semibold ${colors[status] || 'bg-gray-100 text-gray-500'}`}
+    >
+      {labels[status] || 'غير معروف'}
+    </span>
+  );
+}
+
+export default function CourseLessons() {
+  const [lessonStatuses, setLessonStatuses] = useState({});
+  const [expandedTopicId, setExpandedTopicId] = useState(topics[0].id);
+  const [activeLessonId, setActiveLessonId] = useState(null);
+
+  // تحميل الحالات من التخزين
+  useEffect(() => {
+    const savedStatuses = loadLessonStatuses();
+    setLessonStatuses(savedStatuses);
+
+    // تعيين أول درس
+    const firstLesson = rawLessons.find((l) => l.topic_id === topics[0].id);
+    if (firstLesson) {
+      setActiveLessonId(firstLesson.id);
+      updateStatus(firstLesson.id, 'in-progress');
     }
+  }, []);
 
-    return (
-        <div className="p-4" dir="rtl">
-            <div className="flex justify-between items-center mb-6">
-                <Link 
-                    href={`/courses/${courseId}`}
-                    className="flex items-center text-green-600 hover:text-green-800"
+  // تحديث حالة الدرس
+  const updateStatus = (lessonId, status) => {
+    const updated = { ...lessonStatuses, [lessonId]: status };
+    setLessonStatuses(updated);
+    saveLessonStatuses(updated);
+  };
+
+  // دروس مع الحالة المضافة
+  const lessons = rawLessons.map((lesson) => {
+    const status = lessonStatuses[lesson.id] || 'not-started';
+    return { ...lesson, status };
+  });
+
+  const activeLesson = lessons.find((l) => l.id === activeLessonId);
+
+  const handleLessonClick = (lesson) => {
+    if (lesson.status === 'locked') return;
+    setActiveLessonId(lesson.id);
+    updateStatus(lesson.id, 'in-progress');
+  };
+
+  const markAsCompleted = () => {
+    if (activeLesson) {
+      updateStatus(activeLesson.id, 'completed');
+    }
+  };
+
+  return (
+    <div className="flex h-screen font-sans" dir="rtl">
+      {/* قائمة الموضوعات والدروس */}
+      <aside className="w-96 border-l bg-white shadow-md overflow-auto">
+        <h2 className="text-xl font-bold p-4 border-b">المحتوى التعليمي</h2>
+        <div>
+          {topics.map((topic) => {
+            const topicLessons = lessons
+              .filter((l) => l.topic_id === topic.id)
+              .sort((a, b) => a.order - b.order);
+            const isExpanded = expandedTopicId === topic.id;
+
+            return (
+              <div key={topic.id} className="border-b">
+                <button
+                  onClick={() => {
+                    setExpandedTopicId(topic.id);
+                    const first = topicLessons[0];
+                    if (first) {
+                      setActiveLessonId(first.id);
+                      updateStatus(first.id, 'in-progress');
+                    }
+                  }}
+                  className={`w-full text-right px-4 py-3 flex justify-between items-center
+                    ${isExpanded ? 'bg-blue-50 font-semibold' : 'hover:bg-gray-100'}
+                    focus:outline-none`}
                 >
-                    <FaArrowLeft className="ml-1" />
-                    <span>العودة للكورس</span>
-                </Link>
-                
-                <div className="flex items-center text-gray-500">
-                    <FaClock className="ml-1" />
-                    <span>{lesson.duration}</span>
-                </div>
-            </div>
+                  <span>{topic.title}</span>
+                  <svg
+                    className={`w-5 h-5 transform transition-transform duration-300 ${
+                      isExpanded ? 'rotate-90' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
 
-            <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-                <div className="relative pt-[56.25%] bg-black"> {/* نسبة 16:9 */}
-                    <video 
-                        controls
-                        className="absolute top-0 left-0 w-full h-full"
-                        poster={`/thumbnails/${courseId}/${lessonId}.jpg`}
-                    >
-                        <source src={lesson.videoUrl} type="video/mp4" />
-                        متصفحك لا يدعم تشغيل الفيديو
-                    </video>
-                </div>
-                
-                <div className="p-6">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">{lesson.title}</h1>
-                    <p className="text-gray-600 mb-6">{lesson.description}</p>
-                    
-                    <div className="flex gap-3">
-                        {lesson.prevLesson && (
-                            <Link
-                                href={`/courses/${courseId}/${lesson.prevLesson}`}
-                                className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg transition-colors flex items-center"
-                            >
-                                <FaArrowLeft className="ml-1" />
-                                الدرس السابق
-                            </Link>
-                        )}
-                        
-                        {lesson.nextLesson ? (
-                            <Link
-                                href={`/courses/${courseId}/${lesson.nextLesson}`}
-                                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
-                            >
-                                الدرس التالي
-                                <FaPlay className="mr-1" />
-                            </Link>
-                        ) : (
-                            <Link
-                                href={`/courses/${courseId}`}
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-                            >
-                                إنهاء الكورس
-                            </Link>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                    <h2 className="text-xl font-semibold mb-4">المواد المصاحبة</h2>
-                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                        <ul className="divide-y">
-                            {lesson.resources.map((resource, index) => (
-                                <li key={index} className="p-4 hover:bg-gray-50">
-                                    <div className="flex items-center">
-                                        <div className="bg-green-100 p-2 rounded-full mr-3">
-                                            <FaDownload className="text-green-500" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-medium">{resource.name}</h4>
-                                            <p className="text-sm text-gray-500">PDF • {resource.url.split('.').pop().toUpperCase()}</p>
-                                        </div>
-                                        <a 
-                                            href={resource.url} 
-                                            download
-                                            className="text-green-500 hover:text-green-700 px-3 py-1 border border-green-500 rounded-lg"
-                                        >
-                                            تحميل
-                                        </a>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                    
-                    <div className="bg-white rounded-lg shadow-md overflow-hidden mt-6">
-                        <div className="p-4 border-b border-gray-200">
-                            <h3 className="font-medium flex items-center">
-                                <FaQuestionCircle className="ml-2 text-blue-500" />
-                                مناقشة الدرس
-                            </h3>
-                        </div>
-                        <div className="p-4">
-                            <textarea 
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                                rows="3"
-                                placeholder="اطرح سؤالك أو مشاركتك حول هذا الدرس..."
-                            ></textarea>
-                            <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg mt-2">
-                                نشر المشاركة
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div>
-                    <h2 className="text-xl font-semibold mb-4">ملاحظاتك</h2>
-                    <div className="bg-white rounded-lg shadow-md p-4 h-64">
-                        <textarea 
-                            className="w-full h-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            placeholder="دوّن ملاحظاتك أثناء الدرس..."
-                        ></textarea>
-                        <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg mt-2">
-                            حفظ الملاحظات
-                        </button>
-                    </div>
-                    
-                    <div className="bg-white rounded-lg shadow-md p-4 mt-6">
-                        <h3 className="font-medium mb-2">تقدمك في الكورس</h3>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div 
-                                className="bg-green-500 h-2.5 rounded-full" 
-                                style={{ width: '25%' }}
-                            ></div>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-2">25% مكتمل</p>
-                    </div>
-                </div>
-            </div>
+                {/* قائمة الدروس */}
+                {isExpanded && (
+                  <ul className="px-6 pb-4">
+                    {topicLessons.map((lesson) => (
+                      <li
+                        key={lesson.id}
+                        onClick={() => handleLessonClick(lesson)}
+                        className={`flex justify-between items-center cursor-pointer py-2 rounded
+                          ${
+                            lesson.id === activeLessonId
+                              ? 'bg-blue-100 font-semibold'
+                              : 'hover:bg-gray-50'
+                          }
+                          ${lesson.status === 'locked' ? 'opacity-50 cursor-not-allowed' : ''}
+                        `}
+                      >
+                        <span>{lesson.order}. {lesson.title}</span>
+                        <StatusBadge status={lesson.status} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </div>
-    );
+      </aside>
+
+      {/* عرض محتوى الدرس */}
+      <main className="flex-1 p-6 overflow-auto bg-gray-50">
+        {activeLesson ? (
+          <>
+            <h1 className="text-3xl font-bold mb-4">{activeLesson.title}</h1>
+            {activeLesson.image_url && (
+              <img
+                src={activeLesson.image_url}
+                alt={activeLesson.title}
+                className="mb-6 max-w-full rounded shadow"
+              />
+            )}
+            <p className="text-lg leading-relaxed whitespace-pre-line mb-6">
+              {activeLesson.content}
+            </p>
+            {activeLesson.status !== 'completed' && (
+              <button
+                onClick={markAsCompleted}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                إنهاء الدرس
+              </button>
+            )}
+            {activeLesson.status === 'completed' && (
+              <div className="text-green-700 font-semibold">✓ تم إنهاء هذا الدرس</div>
+            )}
+          </>
+        ) : (
+          <p className="text-center text-gray-500 mt-20 text-xl">لم يتم اختيار درس</p>
+        )}
+      </main>
+    </div>
+  );
 }
